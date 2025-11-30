@@ -1,15 +1,49 @@
 #include <fstream>
+#include <iostream>
 #include <string>
 #include <windows.h>
+#include <filesystem>
 
 using namespace std;
 
 ifstream fin("");
 
+string read_file(string file_name){
+    string s_out, s;
+    ifstream fin(file_name);
+
+    cout << endl ;
+    if (not fin.is_open()) {
+        cout << "Unable to open file " + file_name + "\n";
+        return "error";
+    }
+
+    while (getline(fin, s)){
+        cout << file_name << " : " << s << endl;
+        s_out += s; 
+    }
+
+    fin.close();
+    cout << endl ;
+    return s_out; 
+}
 
 int main() {
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
+    
+    string file1, inp;
+
+    cout << "Please enter the file name code (<1l> or <2s> etc.): ";
+    getline(cin, inp);
+
+    cout << filesystem::current_path() << endl ;
+    file1 = read_file("input"+inp+".txt");
+    if (file1 != "error") {
+        // вставляем функции обработки здесь
+        cout << file1 << endl;
+    }
+    else return 1;
     return 0;
 }
 // 1. Привести статистику встречаемости символов (по количеству и в процентах):
@@ -19,6 +53,8 @@ int main() {
 // d.	По использованию редких согласных (ф, ч, х, ц, щ, ш, ж)
 // e.	По использованию таких букв как ь, ъ, ы, й
 // f.	По знакам препинания
+
+
 void firstCase () {
 
 }
