@@ -20,13 +20,13 @@ string readText(const string& path){
 
 vector<string> getWords(string& text) {
     vector<string> words;
-    const string alphabet = "qwertyuiopasdfghjklzxcvbnmёйцукенгшщзхъфывапролджэячсмитьбюЁЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮQWERTYUIOPASDFGHJKLZXCVBNM";
+    const string alphabet = "ёйцукенгшщзхъфывапролджэячсмитьбю";
     text = ' ' + text + ' ';
     bool isWord = false;
     while (!text.empty()) {
         if (alphabet.find(text[0]) == string::npos) {
             if (isWord) {
-
+                
             } else {
                 text.erase(text.begin());
             }
