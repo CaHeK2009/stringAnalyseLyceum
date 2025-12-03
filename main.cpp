@@ -1,16 +1,37 @@
 #include <fstream>
+#include <iostream>
 #include <string>
 #include <windows.h>
+#include <vector>
 
 using namespace std;
 
-ifstream fin("");
+string readText(const string& path){
+    string text;
+    ifstream fin(path);
+    if (not fin.is_open()) {
+        cout << "Unable to open file on path: " + path + "\n";
+        return "error";
+    }
+    fin.close();
+    fin.clear();
+    return text;
+}
 
-
-int main() {
-    SetConsoleCP(1251);
-    SetConsoleOutputCP(1251);
-    return 0;
+vector<string> getWords(string& text) {
+    vector<string> words;
+    const string alphabet = "ёйцукенгшщзхъфывапролджэячсмитьбю";
+    text = ' ' + text + ' ';
+    bool isWord = false;
+    while (!text.empty()) {
+        if (alphabet.find(text[0]) == string::npos) {
+            if (isWord) {
+                
+            } else {
+                text.erase(text.begin());
+            }
+        }
+    }
 }
 // 1. Привести статистику встречаемости символов (по количеству и в процентах):
 // а.	По всем буквам алфавита (сравнить со среднестатистической см. Приложение);
@@ -19,7 +40,7 @@ int main() {
 // d.	По использованию редких согласных (ф, ч, х, ц, щ, ш, ж)
 // e.	По использованию таких букв как ь, ъ, ы, й
 // f.	По знакам препинания
-void firstCase () {
+void firstCase() {
 
 }
 // 2.	Привести статистику по длине слов и предложений.
@@ -55,4 +76,23 @@ void eighthCase () {
 // 9.	Найти наиболее часто встречающиеся слово (слова).
 void ninthCase () {
 
+}
+
+int main() {
+    SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
+
+    for (int i = 1; i <= 4; i++) {
+        cout << readText("../resources/input" + std::to_string(i) + "s.txt") << endl; // debug
+        firstCase();
+        secondCase();
+        thirdCase();
+        fourthCase();
+        fifthCase();
+        sixthCase();
+        seventhCase();
+        eighthCase();
+        ninthCase();
+    }
+    return 0;
 }
