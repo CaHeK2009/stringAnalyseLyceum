@@ -3,35 +3,61 @@
 #include <string>
 #include <windows.h>
 #include <vector>
+#include <locale>
 
 using namespace std;
 
-string readText(const string& path){
-    string text;
-    ifstream fin(path);
+// Функция для перевода всего, что на входе, в нижний регистр. Для упрощения обработки
+wstring toLowerCase(wstring text) {
+    const locale ru{"ru_RU.UTF-8"};
+    auto& facet = use_facet<ctype<wchar_t>>(ru);
+    facet.tolower(text.data(), text.data() + text.size());
+    return text;
+}
+
+wstring readText(const string& path){
+    wstring text;
+    wifstream fin(path);
+    const locale ru{"ru_RU.UTF-8"};
+    fin.imbue(ru);
+    locale::global(ru);
     if (not fin.is_open()) {
         cout << "Unable to open file on path: " + path + "\n";
-        return "error";
+        return L"error";
+    }
+    while (!fin.eof()) {
+        wstring line;
+        getline(fin, line);
+        text += L" ";
+        text.append(line);
     }
     fin.close();
     fin.clear();
     return text;
 }
 
-vector<string> getWords(string& text) {
-    vector<string> words;
-    const string alphabet = "ёйцукенгшщзхъфывапролджэячсмитьбю";
-    text = ' ' + text + ' ';
-    bool isWord = false;
+vector<wstring> getWords(wstring text) {
+    vector<wstring> words;
+    const wstring alphabet = L"ёйцукенгшщзхъфывапролджэячсмитьбю";
+    text.push_back(' ');
+    bool isWord = true;
+    int i = 0;
     while (!text.empty()) {
-        if (alphabet.find(text[0]) == string::npos) {
+        if (alphabet.find(text[i]) == wstring::npos) {
             if (isWord) {
-                
+                words.push_back(text.substr(0, i));
+                text.erase(0, i + 1);
+                isWord = false;
             } else {
                 text.erase(text.begin());
             }
+            i = 0;
+        } else {
+            isWord = true;
+            i++;
         }
     }
+    return words;
 }
 // 1. Привести статистику встречаемости символов (по количеству и в процентах):
 // а.	По всем буквам алфавита (сравнить со среднестатистической см. Приложение);
@@ -82,17 +108,20 @@ int main() {
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
 
-    for (int i = 1; i <= 4; i++) {
-        cout << readText("../resources/input" + std::to_string(i) + "s.txt") << endl; // debug
-        firstCase();
-        secondCase();
-        thirdCase();
-        fourthCase();
-        fifthCase();
-        sixthCase();
-        seventhCase();
-        eighthCase();
-        ninthCase();
+    // for (int i = 1; i <= 4; i++) {
+    //     cout << readText("../resources/input" + std::to_string(i) + "s.txt") << endl; // debug
+    //     firstCase();
+    //     secondCase();
+    //     thirdCase();
+    //     fourthCase();
+    //     fifthCase();
+    //     sixthCase();
+    //     seventhCase();
+    //     eighthCase();
+    //     ninthCase();
+    // }
+    for (const wstring& word : getWords(readText("../resources/input1s.txt"))) {
+        wcout << word << " ";
     }
     return 0;
 }
