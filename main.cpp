@@ -413,13 +413,9 @@ void ninthCase () {
 }
 
 int main() {
-    // SetConsoleCP(CP_UTF8);
-    // SetConsoleOutputCP(CP_UTF8);
     
     ofstream fout(dir_name + "output_l.txt");
     
-    SetConsoleCP(1251);
-    SetConsoleOutputCP(1251);
 
     // void print_string(string func_name, string header){
     //     cout << rpad(header, 40);
