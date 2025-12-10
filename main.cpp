@@ -415,19 +415,8 @@ void ninthCase () {
 int main() {
     
     ofstream fout(dir_name + "output_l.txt");
-    
-
-    // void print_string(string func_name, string header){
-    //     cout << rpad(header, 40);
-    //     for (int i = 1; i <= sizeof(texts); i++) {
-    //         cout << lpad(func_name(texts[i]), 20) ;
-    //     }
-    //     fout << endl ;
-    // }
 
     for (int i = 1; i <= 4; i++) {
-        // cout << readText("../resources/input" + to_string(i) + "s.txt") << endl; // debug
-        // cout << readTextCP1251("../resources/input" + to_string(i) + "s.txt") << endl; // debug
         // заполняем массив с текстами
         texts[i-1] = readTextCP1251(dir_name + "input" + to_string(i) + "l.txt") ;
     }
