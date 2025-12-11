@@ -4,6 +4,7 @@
 #include <utility>
 #include <vector>
 #include <locale>
+#include <map>
 
 using namespace std;
 
@@ -90,6 +91,17 @@ vector conjunctionsCount(4, 0);
 vector<string> topPrepositions(4, "-");
 vector<string> topConjunctions(4, "-");
 
+vector fifthResults(4, 0);
+vector<map<string, vector<int>>> sixthResults = {
+    {{"ГГ", {0, 0}}, {"ГС", {0, 0}}, {"СГ", {0, 0}}, {"СС", {0, 0}}},
+    {{"ГГ", {0, 0}}, {"ГС", {0, 0}}, {"СГ", {0, 0}}, {"СС", {0, 0}}},
+    {{"ГГ", {0, 0}}, {"ГС", {0, 0}}, {"СГ", {0, 0}}, {"СС", {0, 0}}},
+    {{"ГГ", {0, 0}}, {"ГС", {0, 0}}, {"СГ", {0, 0}}, {"СС", {0, 0}}}
+};
+vector seventhResults(4, vector(2, 0));
+vector eighthResults(4, 0);
+vector<vector<string>> ninthResults(4);
+
 string readText(const string& path){
     string text, line;
     ifstream fin(path);
@@ -149,6 +161,13 @@ string spaceFiller (const string& str, const int width, const bool isRight) {
         return result.append(str);
     }
     return str;
+}
+
+bool isVowel(const char letter) {
+    if (vowels.find(letter) != string::npos) {
+        return true;
+    }
+    return false;
 }
 
 // 1. Привести статистику встречаемости символов (по количеству и в процентах):
@@ -303,32 +322,6 @@ void secondCase () {
 
 }
 
-// Функция для разделения текста на слова
-vector<string> split_to_words(const string& text) {
-    vector<string> words;
-    string word, _word;
-
-    const string _text = to_lower(text);
-    for (int i = 0; i < _text.length(); i++) {
-        if (const char c = _text[i]; c >= 96 || c == 56) {
-            _word.push_back(c);
-            word += _word;
-            _word.clear();
-        } else {
-            if (!word.empty()) {
-                words.push_back(word);
-                word.clear(); _word.clear();
-            }
-        }
-    }
-
-    if (!word.empty()) {
-        words.push_back(word);
-    }
-
-    return words;
-}
-
 // Функция проверки, является ли слово предлогом
 bool is_preposition(const string& word) {
     for (const auto & preposition : prepositions) {
@@ -352,7 +345,7 @@ bool is_conjunction(const string& word) {
 // Упрощенная функция для подсчета статистики
 void count_prep_conj_stats() {
     for (int file_num = 0; file_num < 4; file_num++) {
-        vector<string> words = split_to_words(texts[file_num]);
+        vector<string> words = getWords(texts[file_num]);
 
         // Счетчики для каждого предлога и союза
         int prep_counts[50] = {0}; // предполагаем не более 50 разных
@@ -360,8 +353,6 @@ void count_prep_conj_stats() {
 
         // Подсчитываем
         for (const auto& word : words) {
-            // fout << word << " " << endl;
-
             // Проверяем предлоги
             for (int j = 0; j < prepositions.size(); j++) {
                 if (word == prepositions[j]) {
@@ -609,24 +600,136 @@ void fourthCase() {
 }
 // 5.	Привести статистику по чередованию гласных и согласных букв.
 //      Для каждой гласной (согласной) буквы определить гласная или согласная буква стоит после нее (перед ней).
-void fifthCase () {
-
+int fifthCase (const vector<string>& words) {
+    int alternation = 0;
+    for (string word : words) {
+        for (int i = 0; i < word.length() - 1; i++) {
+            if (isVowel(word[i]) != isVowel(word[i + 1]))
+            {
+                alternation++;
+            }
+        }
+    }
+    return alternation;
 }
 // 6.	Привести статистику по парам слов, начинающихся/заканчивающихся на гласную-согласную (по всем парам: ГГ, ГС, СГ, СС).
-void sixthCase () {
-
+void sixthCase (const vector<string> &words, const int z) {
+    for (int i = 0; i < words.size() - 1; i++) {
+        if (isVowel(words[i][0]) && isVowel(words[i + 1][0])) {
+            sixthResults[z]["ГГ"][0]++;
+        } if (isVowel(words[i][0]) && !isVowel(words[i + 1][0])) {
+            sixthResults[z]["ГС"][0]++;
+        } if (!isVowel(words[i][0]) && isVowel(words[i + 1][0])) {
+            sixthResults[z]["СГ"][0]++;
+        } if (!isVowel(words[i][0]) && !isVowel(words[i + 1][0])) {
+            sixthResults[z]["СС"][0]++;
+        } if (isVowel(words[i][words[i].length() - 1]) && isVowel(words[i + 1][words[i].length() - 1])) {
+            sixthResults[z]["ГГ"][1]++;
+        } if (isVowel(words[i][words[i].length() - 1]) && !isVowel(words[i + 1][words[i].length() - 1])) {
+            sixthResults[z]["ГС"][1]++;
+        } if (!isVowel(words[i][words[i].length() - 1]) && isVowel(words[i + 1][words[i].length() - 1])) {
+            sixthResults[z]["СГ"][1]++;
+        } if (!isVowel(words[i][words[i].length() - 1]) && !isVowel(words[i + 1][words[i].length() - 1])) {
+            sixthResults[z]["СС"][1]++;
+        }
+    }
 }
 // 7.	Привести статистику по количеству сочетания трех гласны и трех согласных в слове подряд.
-void seventhCase () {
-
+void seventhCase (const vector<string>& words, const int z) {
+    for (string word : words) {
+        for (int i = 0; i < word.length() - 2; i++) {
+            if (isVowel(word[i]) && isVowel(word[i + 1]) && isVowel(word[i + 2])) {
+                seventhResults[z][0]++;
+            } else if (!isVowel(word[i]) && !isVowel(word[i + 1]) && !isVowel(word[i + 2])) {
+                seventhResults[z][1]++;
+            }
+        }
+    }
 }
 // 8.	Привести статистику по количеству пар слов, первое из которых заканчивается на 2-3 гласные, а второе начинается с 2-3 согласных.
-void eighthCase () {
-
+int eighthCase (vector<string>& words) {
+    for (long long i = words.size() - 1; i >= 0; i--) {
+        if (words[i].size() < 2) {
+            words.erase(words.begin() + i);
+        } else if (words[i].size() < 4) {
+            words[i] = words[i] + "аб" + words[i];
+        }
+    }
+    int result = 0;
+    for (int i = 0; i < words.size() - 1; i++) {
+        if (const unsigned long long n = words[i].length();
+            isVowel(words[i][n - 1]) && isVowel(words[i][n - 2]) &&
+            ((isVowel(words[i][n - 3]) && !isVowel(words[i][n - 4])) || !isVowel(words[i][n - 3])) &&
+            !isVowel(words[i + 1][0]) && !isVowel(words[i + 1][1]) &&
+            ((!isVowel(words[i + 1][2]) && isVowel(words[i + 1][3])) || isVowel(words[i + 1][2]))
+        ) {
+            result++;
+        }
+    }
+    return result;
 }
 // 9.	Найти наиболее часто встречающиеся слово (слова).
-void ninthCase () {
+vector<string> ninthCase (const vector<string>& words) {
+    map<string, int> wordsQuantity;
+    vector<string> result;
+    for (const string& word : words) {
+        if (wordsQuantity.find(word) == wordsQuantity.end()) {
+            wordsQuantity[word] = 1;
+        } else {
+            wordsQuantity[word]++;
+        }
+    }
+    int max = 0;
+    for (const pair<string, int>& pair : wordsQuantity) {
+        if (pair.second > max) {
+            max = pair.second;
+        }
+    }
+    for (const pair<string, int>& pair : wordsQuantity) {
+        if (pair.second == max) {
+            result.push_back(pair.first);
+        }
+    }
+    return result;
+}
 
+void submitStatistics (const vector<string> &ltexts) {
+    fout << spaceFiller("Чередующиеся гласные и согласные", 40, true);
+    for (int i = 0; i < ltexts.size(); i++) {
+        fout << spaceFiller(to_string(fifthResults[i]) + "(" +
+            to_string((static_cast<double>(fifthResults[i]) / getWords(to_lower(ltexts[i])).size()) * 100) + "%)", 20, false);
+    }
+    fout << endl << spaceFiller("Пары слов, начинающиеся/заканчивающиеся на гласную/согласную", 40, true) << endl;
+    for (int j = 0; j < 2; j++) {
+        for (int l = 0; l < 4; l++) {
+            string output;
+            switch (l) {
+                case 0: {
+                    output += "Гласная - гласная";
+                    break;
+                } case 1: {
+                    output += "Гласная - согласная";
+                    break;
+                } case 2: {
+                    output += "Согласная - гласная";
+                    break;
+                } case 3: {
+                    output += "Согласная - согласная";
+                    break;
+                } default: break;
+            }
+            if (j == 0) {
+                output += " в начале";
+            } else {
+                output += " в конце";
+            }
+            fout << spaceFiller(output, 40, true);
+            for (int i = 0; i < ltexts.size(); i++) {
+                // map<string, int>::iterator it = l;
+                // fout << spaceFiller(to_string(sixthResults[i][sixthResults[i].begin() + l][j]))
+            }
+        }
+    }
 }
 
 int main() {
@@ -634,6 +737,7 @@ int main() {
         // заполняем массив с текстами
         texts[i-1] = readText(dir_name + "input" + to_string(i) + "l.txt") ;
     }
+
     fout << endl ;
     // выводим шапку
     fout << spaceFiller("Файл",40, true)
@@ -702,11 +806,15 @@ int main() {
 
     thirdCase();
     fourthCase();
-    fifthCase();
-    sixthCase();
-    seventhCase();
-    eighthCase();
-    ninthCase();
+    for (int i = 0; i < texts.size(); i++) {
+        vector<string> words = getWords(to_lower(texts[i]));
+        fifthResults[i] = fifthCase(words);
+        sixthCase(words, i);
+        seventhCase(words, i);
+        eighthResults[i] = eighthCase(words);
+        ninthResults[i] = ninthCase(words);
+    }
+    submitStatistics(texts);
 
     fout.close();
     return 0;
