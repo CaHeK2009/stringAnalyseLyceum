@@ -1,19 +1,17 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-// #include <windows.h>
+#include <utility>
 #include <vector>
 #include <locale>
 
 using namespace std;
 
-// Рабочий каталог с файлами
-string dir_name = "../resources/" ;
-// string dir_name = ".ьу./" ;
-// Массив с текстами
-vector<string> texts(4) ;
-// Массив с критериями
-vector<string> headers = {
+ofstream fout("../resouces/output_l.txt");
+
+string dir_name = "../resources/"; // Рабочий каталог с файлами
+vector<string> texts(4); // Массив с текстами
+vector<string> headers = { // Массив с критериями
     "Всего букв"            // 0
     , "Гласные"             // 1
     , "Согласные"           // 2
@@ -159,7 +157,7 @@ vector<string> getWordsCP1251(string text) {
     return words;
 }
 
-// Функция для перевода всего, что на входе, в нижний регистр. для упрощения обработки
+// Функция для перевода всего, что на входе, в нижний регистр. Для упрощения обработки
 string to_lower(string text) {
     for (int i = 0; i < text.length(); i++) {
         if (text[i] >= 'А' && text[i] <= 'Я') {
@@ -199,8 +197,8 @@ string lpad(const string& str, int width, char filler = ' ') {
 // f.	По знакам препинания
 // void firstCase() {
 
-string firstCase(string text, int scope = 0, char s_sym = ' ') {
-    string lower_text = to_lower(text);
+string firstCase(string text, const int scope = 0, const char s_sym = ' ') {
+    const string lower_text = to_lower(std::move(text));
 
     int total_letters = 0;
     int vowel_count = 0;
@@ -217,15 +215,15 @@ string firstCase(string text, int scope = 0, char s_sym = ' ') {
     int sentence_count = 0;
 
     for (int i = 0; i < lower_text.length(); i++) {
-        char c = lower_text[i];
+        const char c = lower_text[i];
         if ((c >= 'а' && c <= 'я') || c == 'ё') { // 'ё' стоит отдельно от остальных букв в кодовой таблице символов
             total_letters++;
-            int p = alphabet.find(c) ;
+            const int p = alphabet.find(c) ;
             l_counts[p]++;
             current_word_length++;
             if (vowels.find(c) != string::npos) vowel_count++;
-            if (consonants.find(c) != string::npos) { // могли бы просто сказать 'else',
-                // но тем самым гарантируем, что ни одна из букв не потеряется. все будет видно на общей сумме букв
+            if (consonants.find(c) != string::npos) { // Могли бы просто сказать 'else',
+                // но тем самым гарантируем, что ни одна из букв не потеряется. Все будет видно на общей сумме букв
             // else {
                 consonants_count++;
                 if (voiced.find(c) != string::npos) voiced_count++;
@@ -320,11 +318,9 @@ string firstCase(string text, int scope = 0, char s_sym = ' ') {
         case 70 : {// встречаемость букв
             if (s_sym == ' ') return to_string(l_counts[33]*1.0/total_letters).substr(0,5) +
                 "(" + to_string(avg_freq[33]).substr(0,5) + ")";
-            else {
-                int p = alphabet.find(s_sym) ;
-                return to_string(l_counts[p]*1.0/total_letters).substr(0,5) +
-                "(" + to_string(avg_freq[p]).substr(0,5) + ")";
-            }
+            const int p = alphabet.find(s_sym) ;
+            return to_string(l_counts[p]*1.0/total_letters).substr(0,5) +
+            "(" + to_string(avg_freq[p]).substr(0,5) + ")";
             break ;
         }
         case 80 : {// всего слов
@@ -346,11 +342,12 @@ string firstCase(string text, int scope = 0, char s_sym = ' ') {
         case 100 : // всего букв
             return to_string(total_letters) ;
             break ;
+        default: return "";
     }
 }
 
 // 2.	Привести статистику по длине слов и предложений.
-// этот кусок делается в firstCase
+// Этот кусок делается в firstCase
 void secondCase () {
 
 }
@@ -362,16 +359,15 @@ void secondCase () {
 // Функция для разделения текста на слова
 vector<string> split_to_words(const string& text) {
     vector<string> words;
-    string word, _word, _text;
+    string word, _word;
 
-    _text = to_lower(text) ;
+    const string _text = to_lower(text);
     for (int i = 0; i < _text.length(); i++) {
-        char c = _text[i];
-        if ((c >= 'а' && c <= 'я') || c == 'ё')
+        if (char c = _text[i]; (c >= 'а' && c <= 'я') || c == 'ё')
             // || (c >= 'А' && c <= 'Я') || c == 'Ё')
             {
             _word.push_back(c);
-            word = word + _word;
+            word += _word;
             _word.clear();
         } else {
             if (!word.empty()) {
@@ -390,8 +386,8 @@ vector<string> split_to_words(const string& text) {
 
 // Функция проверки, является ли слово предлогом
 bool is_preposition(const string& word) {
-    for (int i = 0; i < prepositions.size(); i++) {
-        if (word == prepositions[i]) {
+    for (const auto & preposition : prepositions) {
+        if (word == preposition) {
             return true;
         }
     }
@@ -400,8 +396,8 @@ bool is_preposition(const string& word) {
 
 // Функция проверки, является ли слово союзом
 bool is_conjunction(const string& word) {
-    for (int i = 0; i < conjunctions.size(); i++) {
-        if (word == conjunctions[i]) {
+    for (const auto & conjunction : conjunctions) {
+        if (word == conjunction) {
             return true;
         }
     }
@@ -416,11 +412,9 @@ void count_prep_conj_stats() {
         // Счетчики для каждого предлога и союза
         int prep_counts[50] = {0}; // предполагаем не более 50 разных
         int conj_counts[50] = {0};
-        ofstream fout(dir_name + "output_l.txt", ios::app);
 
         // Подсчитываем
-        for (int i = 0; i < words.size(); i++) {
-            string word = words[i];
+        for (const auto& word : words) {
             // fout << word << " " << endl;
 
             // Проверяем предлоги
@@ -476,8 +470,6 @@ void count_prep_conj_stats() {
 void thirdCase() {
     count_prep_conj_stats(); // сначала подсчитываем статистику
 
-    ofstream fout(dir_name + "output_l.txt", ios::app);
-
     // Добавляем новые строки в основную таблицу
     fout << rpad("Всего предлогов", 40);
     for (int i = 0; i < 4; i++) {
@@ -513,8 +505,6 @@ void fourthCase() {
     string bigrams_list[10] = {"ст", "но", "ен", "то", "на", "ов", "ни", "ра", "во", "ко"};
     string trigrams_list[6] = {"сто", "ено", "нов", "тов", "ово", "ова"};
 
-    ofstream fout(dir_name + "output_l.txt", ios::app);
-
     // Вывод заголовка для биграмм
     fout << endl << rpad("Буквосочетания (биграммы)", 40) ;
     // for (int i = 0; i < 4; i++) {
@@ -523,8 +513,7 @@ void fourthCase() {
     fout << endl;
 
     // Обработка каждой биграммы
-    for (int bg_idx = 0; bg_idx < 10; bg_idx++) {
-        string bigram = bigrams_list[bg_idx];
+    for (const auto& bigram : bigrams_list) {
         fout << rpad(bigram, 40);
 
         // Для каждого файла считаем эту биграмму
@@ -563,8 +552,7 @@ void fourthCase() {
     fout << endl;
 
     // Обработка каждой триграммы
-    for (int tg_idx = 0; tg_idx < 6; tg_idx++) {
-        string trigram = trigrams_list[tg_idx];
+    for (const auto& trigram : trigrams_list) {
         fout << rpad(trigram, 40);
 
         // Для каждого файла считаем эту триграмму
@@ -603,8 +591,7 @@ void fourthCase() {
         string max_bigram = "-";
 
         // Ищем самую частую биграмму среди всех 10
-        for (int bg_idx = 0; bg_idx < 10; bg_idx++) {
-            string bigram = bigrams_list[bg_idx];
+        for (const auto& bigram : bigrams_list) {
             int count = 0;
 
             for (int i = 0; i <= text.length() - 2; i++) {
@@ -642,8 +629,7 @@ void fourthCase() {
         string max_trigram = "-";
 
         // Ищем самую частую триграмму среди всех 6
-        for (int tg_idx = 0; tg_idx < 6; tg_idx++) {
-            string trigram = trigrams_list[tg_idx];
+        for (const auto& trigram : trigrams_list) {
             int count = 0;
 
             for (int i = 0; i <= text.length() - 3; i++) {
@@ -734,55 +720,56 @@ int main() {
     // fout << headers.size() << endl ; fout << sizeof(texts) << endl ;
     for (int i = 0; i < headers.size(); i++) {
         fout << rpad(headers[i], 40);
-        for (int j = 0; j < texts.size(); j++) {
+        for (auto & text : texts) {
             string result ;
             switch (i) {
-                case 0: result = firstCase(texts[j], 100) ; break ;
-                case 1: result = firstCase(texts[j], 0) ; break ;
-                case 2: result = firstCase(texts[j], 10) ; break ;
-                case 3: result = firstCase(texts[j], 20) ; break ;
-                case 4: result = firstCase(texts[j], 30) ; break ;
-                case 5: result = firstCase(texts[j], 40) ; break ;
-                case 6: result = firstCase(texts[j], 50) ; break ;
-                case 7: result = firstCase(texts[j], 60) ; break ;
-                case 8: result = firstCase(texts[j], 70, 'а') ; break ;
-                case 9: result = firstCase(texts[j], 70, 'б') ; break ;
-                case 10: result = firstCase(texts[j], 70, 'в') ; break ;
-                case 11: result = firstCase(texts[j], 70, 'г') ; break ;
-                case 12: result = firstCase(texts[j], 70, 'д') ; break ;
-                case 13: result = firstCase(texts[j], 70, 'е') ; break ;
-                case 14: result = firstCase(texts[j], 70, 'ё') ; break ;
-                case 15: result = firstCase(texts[j], 70, 'ж') ; break ;
-                case 16: result = firstCase(texts[j], 70, 'з') ; break ;
-                case 17: result = firstCase(texts[j], 70, 'и') ; break ;
-                case 18: result = firstCase(texts[j], 70, 'й') ; break ;
-                case 19: result = firstCase(texts[j], 70, 'к') ; break ;
-                case 20: result = firstCase(texts[j], 70, 'л') ; break ;
-                case 21: result = firstCase(texts[j], 70, 'м') ; break ;
-                case 22: result = firstCase(texts[j], 70, 'н') ; break ;
-                case 23: result = firstCase(texts[j], 70, 'о') ; break ;
-                case 24: result = firstCase(texts[j], 70, 'п') ; break ;
-                case 25: result = firstCase(texts[j], 70, 'р') ; break ;
-                case 26: result = firstCase(texts[j], 70, 'с') ; break ;
-                case 27: result = firstCase(texts[j], 70, 'т') ; break ;
-                case 28: result = firstCase(texts[j], 70, 'у') ; break ;
-                case 29: result = firstCase(texts[j], 70, 'ф') ; break ;
-                case 30: result = firstCase(texts[j], 70, 'х') ; break ;
-                case 31: result = firstCase(texts[j], 70, 'ц') ; break ;
-                case 32: result = firstCase(texts[j], 70, 'ч') ; break ;
-                case 33: result = firstCase(texts[j], 70, 'ш') ; break ;
-                case 34: result = firstCase(texts[j], 70, 'щ') ; break ;
-                case 35: result = firstCase(texts[j], 70, 'ъ') ; break ;
-                case 36: result = firstCase(texts[j], 70, 'ы') ; break ;
-                case 37: result = firstCase(texts[j], 70, 'ь') ; break ;
-                case 38: result = firstCase(texts[j], 70, 'э') ; break ;
-                case 39: result = firstCase(texts[j], 70, 'ю') ; break ;
-                case 40: result = firstCase(texts[j], 70, 'я') ; break ;
-                case 41: result = firstCase(texts[j], 70) ; break ;
-                case 42: result = firstCase(texts[j], 80) ; break ;
-                case 43: result = firstCase(texts[j], 85) ; break ;
-                case 44: result = firstCase(texts[j], 90) ; break ;
-                case 45: result = firstCase(texts[j], 95) ; break ;
+                case 0: result = firstCase(text, 100) ; break ;
+                case 1: result = firstCase(text, 0) ; break ;
+                case 2: result = firstCase(text, 10) ; break ;
+                case 3: result = firstCase(text, 20) ; break ;
+                case 4: result = firstCase(text, 30) ; break ;
+                case 5: result = firstCase(text, 40) ; break ;
+                case 6: result = firstCase(text, 50) ; break ;
+                case 7: result = firstCase(text, 60) ; break ;
+                case 8: result = firstCase(text, 70, 'а') ; break ;
+                case 9: result = firstCase(text, 70, 'б') ; break ;
+                case 10: result = firstCase(text, 70, 'в') ; break ;
+                case 11: result = firstCase(text, 70, 'г') ; break ;
+                case 12: result = firstCase(text, 70, 'д') ; break ;
+                case 13: result = firstCase(text, 70, 'е') ; break ;
+                case 14: result = firstCase(text, 70, 'ё') ; break ;
+                case 15: result = firstCase(text, 70, 'ж') ; break ;
+                case 16: result = firstCase(text, 70, 'з') ; break ;
+                case 17: result = firstCase(text, 70, 'и') ; break ;
+                case 18: result = firstCase(text, 70, 'й') ; break ;
+                case 19: result = firstCase(text, 70, 'к') ; break ;
+                case 20: result = firstCase(text, 70, 'л') ; break ;
+                case 21: result = firstCase(text, 70, 'м') ; break ;
+                case 22: result = firstCase(text, 70, 'н') ; break ;
+                case 23: result = firstCase(text, 70, 'о') ; break ;
+                case 24: result = firstCase(text, 70, 'п') ; break ;
+                case 25: result = firstCase(text, 70, 'р') ; break ;
+                case 26: result = firstCase(text, 70, 'с') ; break ;
+                case 27: result = firstCase(text, 70, 'т') ; break ;
+                case 28: result = firstCase(text, 70, 'у') ; break ;
+                case 29: result = firstCase(text, 70, 'ф') ; break ;
+                case 30: result = firstCase(text, 70, 'х') ; break ;
+                case 31: result = firstCase(text, 70, 'ц') ; break ;
+                case 32: result = firstCase(text, 70, 'ч') ; break ;
+                case 33: result = firstCase(text, 70, 'ш') ; break ;
+                case 34: result = firstCase(text, 70, 'щ') ; break ;
+                case 35: result = firstCase(text, 70, 'ъ') ; break ;
+                case 36: result = firstCase(text, 70, 'ы') ; break ;
+                case 37: result = firstCase(text, 70, 'ь') ; break ;
+                case 38: result = firstCase(text, 70, 'э') ; break ;
+                case 39: result = firstCase(text, 70, 'ю') ; break ;
+                case 40: result = firstCase(text, 70, 'я') ; break ;
+                case 41: result = firstCase(text, 70) ; break ;
+                case 42: result = firstCase(text, 80) ; break ;
+                case 43: result = firstCase(text, 85) ; break ;
+                case 44: result = firstCase(text, 90) ; break ;
+                case 45: result = firstCase(text, 95) ; break ;
+                default: break;
             }
             fout << lpad(result, 20) ;
         }
