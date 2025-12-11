@@ -7,7 +7,7 @@
 
 using namespace std;
 
-ofstream fout("../resouces/output_l.txt");
+ofstream fout("../resources/output_l.txt");
 
 string dir_name = "../resources/"; // Рабочий каталог с файлами
 vector<string> texts(4); // Массив с текстами
@@ -59,25 +59,14 @@ vector<string> headers = { // Массив с критериями
     , "Количество предложений"              // 44
     , "Среднее число слов в предложении"    // 45
 } ;
-// Гласные буквы
-const string vowels = "аеёиоуыэюя";
-// Согласные буквы
-const string consonants = "бвгджзйклмнпрстфхцчшщьъ";
-// Весь алфавит
-// const string alphabet = "ёйцукенгшщзхъфывапролджэячсмитьбюabcdefghijklmnopqrstuvwxyz";
+const string vowels = "аеёиоуыэюя"; // Гласные буквы
+const string consonants = "бвгджзйклмнпрстфхцчшщьъ"; // Согласные буквы
 const string alphabet = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя";
-// Звонкие согласные
-const string voiced = "бвгдзжлмнрй";  // й - сонорный, но условно к звонким
-// Глухие согласные
-const string voiceless = "пфктшсхчщц";
-// Редкие согласные
-const string rare_consonants = "фхцчшщж";
-// ь, ъ, ы, й
-const string sq = "ьъый" ;
-// Знаки препинания
-const string punctuation_marks = ".,:;?!-()\"\'" ;
-// Встречаемость букв русского языка
-vector<double> avg_freq = {
+const string voiced = "бвгдзжлмнрй";  // Звонкие согласные. Й - сонорный, но условно к звонким
+const string voiceless = "пфктшсхчщц"; // Глухие согласные
+const string rare_consonants = "фхцчшщж"; // Редкие согласные
+const string punctuation_marks = ".,:;?!-()\"\'" ; // Знаки препинания
+vector letterOccurrence = { // Встречаемость букв русского языка
     // абвгдеёжзий
     0.064, 0.015, 0.039, 0.014, 0.026, 0.074, 0.074, 0.008, 0.015, 0.064, 0.010,
     // клмнопрстуф
@@ -87,45 +76,28 @@ vector<double> avg_freq = {
     // пробел
     , 0.145
 };
-
-// Предлоги и союзы для анализа
-const vector<string> prepositions = {
+const vector<string> prepositions = { // Предлоги
     "в", "на", "с", "по", "из", "за", "к", "от", "до", "у",
     "для", "о", "при", "под", "над", "про", "со", "без", "через"
 };
-
-const vector<string> conjunctions = {
+const vector<string> conjunctions = { // союзы
     "и", "а", "но", "или", "что", "как", "чтобы", "если", "когда",
     "потому", "так", "тоже", "либо", "ни", "да", "зато"
 };
-
 // для упрощения подсчета предлогов и союзов
-vector<int> total_preps(4, 0);
-vector<int> total_conjs(4, 0);
-vector<string> top_preps(4, "-");
-vector<string> top_conjs(4, "-");
+vector prepositionsCount(4, 0);
+vector conjunctionsCount(4, 0);
+vector<string> topPrepositions(4, "-");
+vector<string> topConjunctions(4, "-");
 
-// Функция для перевода всего, что на входе, в нижний регистр. Для упрощения обработки
-wstring toLowerCase(wstring text) {
-    const locale ru{"ru_RU.UTF-8"};
-    auto& facet = use_facet<ctype<wchar_t>>(ru);
-    facet.tolower(text.data(), text.data() + text.size());
-    return text;
-}
-
-string readTextCP1251(const string& path){
+string readText(const string& path){
     string text, line;
     ifstream fin(path);
-    // const locale ru{".1251"};
-    // fin.imbue(ru);
-    // locale::global(ru);
     if (not fin.is_open()) {
         cout << "Unable to open file on path: " + path + "\n";
         return "error";
     }
-    // while (!fin.eof()) {
     while (getline(fin, line)) {
-        // text += L" ";
         text.append(line);
     }
     fin.close();
@@ -133,9 +105,8 @@ string readTextCP1251(const string& path){
     return text;
 }
 
-vector<string> getWordsCP1251(string text) {
+vector<string> getWords(string text) {
     vector<string> words;
-    // const string alphabet = "ёйцукенгшщзхъфывапролджэячсмитьбю";
     text.push_back(' ');
     bool isWord = true;
     int i = 0;
@@ -157,35 +128,27 @@ vector<string> getWordsCP1251(string text) {
     return words;
 }
 
-// Функция для перевода всего, что на входе, в нижний регистр. Для упрощения обработки
-string to_lower(string text) {
+string to_lower(string text) { // Функция для перевода всего, что на входе, в нижний регистр
     for (int i = 0; i < text.length(); i++) {
-        if (text[i] >= 'А' && text[i] <= 'Я') {
-            text[i] = text[i] - 'А' + 'а';
-        } else if (text[i] >= 'A' && text[i] <= 'Z') {
-            text[i] = text[i] - 'A' + 'a';
+        if (text[i] >= 64 && text[i] <= 95) {
+            text[i] += 32;
         }
     }
     return text;
 }
 
-// Функция для упрощения вывода - выравнивание по левому краю (добавляет пробелы справа)
-string rpad(const string& str, int width, char filler = ' ') {
-    string result = str;
-    if (result.length() < width) {
-        result.append(width - result.length(), filler);
-    }
-    return result;
-}
-
-// Функция для упрощения вывода - выравнивание по правому краю (добавляет пробелы слева)
-string lpad(const string& str, int width, char filler = ' ') {
-    string result;
+// Выравнивание по правому или левому краю ы зависимости от режима (добавляет пробелы)
+string spaceFiller (const string& str, const int width, const bool isRight) {
     if (str.length() < width) {
-        result.append(width - str.length(), filler);
+        string result;
+        if (isRight) {
+            result = str;
+            return result.append(width - str.length(), ' ');
+        }
+        result.append(width - str.length(), ' ');
+        return result.append(str);
     }
-    result.append(str);
-    return result;
+    return str;
 }
 
 // 1. Привести статистику встречаемости символов (по количеству и в процентах):
@@ -195,11 +158,8 @@ string lpad(const string& str, int width, char filler = ' ') {
 // d.	По использованию редких согласных (ф, ч, х, ц, щ, ш, ж)
 // e.	По использованию таких букв как ь, ъ, ы, й
 // f.	По знакам препинания
-// void firstCase() {
-
 string firstCase(string text, const int scope = 0, const char s_sym = ' ') {
-    const string lower_text = to_lower(std::move(text));
-
+    text = to_lower(std::move(text));
     int total_letters = 0;
     int vowel_count = 0;
     int consonants_count = 0;
@@ -208,36 +168,36 @@ string firstCase(string text, const int scope = 0, const char s_sym = ' ') {
     int rare_count = 0;
     int sd_count = 0;
     int pm_count = 0;
-    vector<int> l_counts(34, 0);
+    vector l_counts(34, 0);
     int word_count = 0;
     int current_word_length = 0;
     int total_word_length = 0;
     int sentence_count = 0;
 
-    for (int i = 0; i < lower_text.length(); i++) {
-        const char c = lower_text[i];
-        if ((c >= 'а' && c <= 'я') || c == 'ё') { // 'ё' стоит отдельно от остальных букв в кодовой таблице символов
+    for (int i = 0; i < text.length(); i++) {
+        const char c = text[i];
+        if ((c >= 96 && c <= 127) || c == 56) { // 'ё' стоит отдельно от остальных букв в кодовой таблице символов
             total_letters++;
             const int p = alphabet.find(c) ;
             l_counts[p]++;
             current_word_length++;
             if (vowels.find(c) != string::npos) vowel_count++;
-            if (consonants.find(c) != string::npos) { // Могли бы просто сказать 'else',
+            else if (consonants.find(c) != string::npos) { // Могли бы просто сказать 'else',
                 // но тем самым гарантируем, что ни одна из букв не потеряется. Все будет видно на общей сумме букв
-            // else {
                 consonants_count++;
-                if (voiced.find(c) != string::npos) voiced_count++;
-                else if (voiceless.find(c) != string::npos) voiceless_count++;
-                if (rare_consonants.find(lower_text[i]) != string::npos) rare_count++;
+                voiced.find(c) != string::npos ? voiced_count++ : voiceless.find(c) != string::npos ? voiceless_count++ : 0;
+                rare_consonants.find(text[i]) != string::npos ? rare_count++ : 0;
             }
-            if (c == 'ы' || c == 'й' || c == 'ь' || c == 'ъ') sd_count++;
+            if ((c >= 122 && c <= 124) || c == 105) sd_count++;
         }
         else {
             // если нашли многоточие...
-            if ((i<(lower_text.length()-2)) && c == '.' && lower_text[i+1] == '.'
-                && lower_text[i+2] == '.') {
-                    pm_count++ ; sentence_count++ ; i=i+2; continue;
-                }
+            if ((i<(text.length()-2)) && c == '.' && text[i+1] == '.' && text[i+2] == '.') {
+                pm_count++;
+                sentence_count++;
+                i+= 2;
+                continue;
+            }
             // другие знаки препинания
             if (punctuation_marks.find(c) != string::npos) pm_count++;
             // слова
@@ -252,98 +212,89 @@ string firstCase(string text, const int scope = 0, const char s_sym = ' ') {
         // границы предложений
         if (c == '.' || c == '!' || c == '?') sentence_count++;
     }
-
     switch (scope) {
-        case 0 : {// информация по гласным
+        case 0 : { // информация по гласным
             double vowel_percent;
             if (total_letters > 0) vowel_percent = (vowel_count * 100.0) / total_letters;
             else vowel_percent = 0;
             return to_string(vowel_count) +
                 "(" + to_string(vowel_percent).substr(0,5) + "%)";
-            break;
         }
-        case 10 : {// информация по согласным
+        case 10 : { // информация по согласным
             double consonants_percent;
             if (total_letters > 0) consonants_percent = (consonants_count * 100.0) / total_letters;
             else consonants_percent = 0;
             return to_string(consonants_count) +
                 "(" + to_string(consonants_percent).substr(0,5) + "%)";
-            break ;
         }
-        case 20 : {// звонкие согласные
+        case 20 : { // звонкие согласные
             double voiced_percent;
             if (consonants_count > 0)
                 voiced_percent = (voiced_count * 100.0) / consonants_count ;
             else voiced_percent = 0 ;
             return to_string(voiced_count) +
                 "(" + to_string(voiced_percent).substr(0,5) + "%)";
-            break;
         }
-        case 30 : {// глухие согласные
+        case 30 : { // глухие согласные
             double voiceless_percent;
             if (consonants_count > 0)
                 voiceless_percent = (voiceless_count * 100.0) / consonants_count ;
             else voiceless_percent = 0 ;
             return to_string(voiceless_count) +
                 "(" + to_string(voiceless_percent).substr(0,5) + "%)";
-            break;
         }
-        case 40 : {// редкие согласные
+        case 40 : { // редкие согласные
             double rare_percent;
             if (consonants_count > 0)
                 rare_percent = (rare_count * 100.0) / consonants_count ;
             else rare_percent = 0 ;
             return to_string(rare_count) +
                 "(" + to_string(rare_percent).substr(0,5) + "%)";
-            break;
         }
-        case 50 : {// ь, ъ, ы, й
+        case 50 : { // ь, ъ, ы, й
             double sd_percent;
             if (consonants_count > 0)
                 sd_percent = (sd_count * 100.0) / total_letters ;
             else sd_percent = 0 ;
             return to_string(sd_count) +
                 "(" + to_string(sd_percent).substr(0,5) + "%)";
-            break;
         }
-        case 60 : {// знаки препинания
+        case 60 : { // знаки препинания
             double pm_percent;
             if (pm_count > 0)
                 pm_percent = (pm_count * 100.0) / total_letters ;
             else pm_percent = 0 ;
             return to_string(pm_count) +
                 "(" + to_string(pm_percent).substr(0,5) + "%)";
-            break;
         }
-        case 70 : {// встречаемость букв
+        case 70 : { // встречаемость букв
             if (s_sym == ' ') return to_string(l_counts[33]*1.0/total_letters).substr(0,5) +
-                "(" + to_string(avg_freq[33]).substr(0,5) + ")";
+                "(" + to_string(letterOccurrence[33]).substr(0,5) + ")";
             const int p = alphabet.find(s_sym) ;
             return to_string(l_counts[p]*1.0/total_letters).substr(0,5) +
-            "(" + to_string(avg_freq[p]).substr(0,5) + ")";
-            break ;
+            "(" + to_string(letterOccurrence[p]).substr(0,5) + ")";
         }
-        case 80 : {// всего слов
+        case 80 : { // всего слов
             if (word_count != 0) return to_string(word_count);
             break ;
         }
-        case 85 : {// средняя длина слова
+        case 85 : { // средняя длина слова
             if (word_count != 0) return to_string(total_word_length*1.0/word_count).substr(0,5);
             break;
         }
-        case 90 : {// количество предложений
+        case 90 : { // количество предложений
             if (sentence_count != 0) return to_string(sentence_count) ;
             break;
         }
-        case 95 : {// среднее кол-во слов в предложении
+        case 95 : { // среднее кол-во слов в предложении
             if (sentence_count != 0) return to_string(word_count*1.0/sentence_count).substr(0,5);
             break;
         }
         case 100 : // всего букв
             return to_string(total_letters) ;
-            break ;
         default: return "";
     }
+    return "";
 }
 
 // 2.	Привести статистику по длине слов и предложений.
@@ -351,10 +302,6 @@ string firstCase(string text, const int scope = 0, const char s_sym = ' ') {
 void secondCase () {
 
 }
-// 3.	Привести статистику по предлогам и союзам (наиболее часто встречающимся)
-// void thirdCase () {
-
-// }
 
 // Функция для разделения текста на слова
 vector<string> split_to_words(const string& text) {
@@ -363,9 +310,7 @@ vector<string> split_to_words(const string& text) {
 
     const string _text = to_lower(text);
     for (int i = 0; i < _text.length(); i++) {
-        if (char c = _text[i]; (c >= 'а' && c <= 'я') || c == 'ё')
-            // || (c >= 'А' && c <= 'Я') || c == 'Ё')
-            {
+        if (const char c = _text[i]; c >= 96 || c == 56) {
             _word.push_back(c);
             word += _word;
             _word.clear();
@@ -421,7 +366,7 @@ void count_prep_conj_stats() {
             for (int j = 0; j < prepositions.size(); j++) {
                 if (word == prepositions[j]) {
                     prep_counts[j]++;
-                    total_preps[file_num]++;
+                    prepositionsCount[file_num]++;
                     break;
                 }
             }
@@ -430,7 +375,7 @@ void count_prep_conj_stats() {
             for (int j = 0; j < conjunctions.size(); j++) {
                 if (word == conjunctions[j]) {
                     conj_counts[j]++;
-                    total_conjs[file_num]++;
+                    conjunctionsCount[file_num]++;
                     break;
                 }
             }
@@ -446,7 +391,7 @@ void count_prep_conj_stats() {
             }
         }
         if (max_prep_index != -1 && max_prep_count > 0) {
-            top_preps[file_num] = prepositions[max_prep_index] +
+            topPrepositions[file_num] = prepositions[max_prep_index] +
                                   "(" + to_string(max_prep_count) + ")";
         }
 
@@ -460,38 +405,38 @@ void count_prep_conj_stats() {
             }
         }
         if (max_conj_index != -1 && max_conj_count > 0) {
-            top_conjs[file_num] = conjunctions[max_conj_index] +
+            topConjunctions[file_num] = conjunctions[max_conj_index] +
                                   "(" + to_string(max_conj_count) + ")";
         }
     }
 }
 
-// предлоги и союзы
+// 3.	Привести статистику по предлогам и союзам (наиболее часто встречающимся)
 void thirdCase() {
     count_prep_conj_stats(); // сначала подсчитываем статистику
 
     // Добавляем новые строки в основную таблицу
-    fout << rpad("Всего предлогов", 40);
+    fout << spaceFiller("Всего предлогов", 40, true);
     for (int i = 0; i < 4; i++) {
-        fout << lpad(to_string(total_preps[i]), 20);
+        fout << spaceFiller(to_string(prepositionsCount[i]), 20, false);
     }
     fout << endl;
 
-    fout << rpad("Всего союзов", 40);
+    fout << spaceFiller("Всего союзов", 40, true);
     for (int i = 0; i < 4; i++) {
-        fout << lpad(to_string(total_conjs[i]), 20);
+        fout << spaceFiller(to_string(conjunctionsCount[i]), 20, false);
     }
     fout << endl;
 
-    fout << rpad("Самый частый предлог", 40);
+    fout << spaceFiller("Самый частый предлог", 40, true);
     for (int i = 0; i < 4; i++) {
-        fout << lpad(top_preps[i], 20);
+        fout << spaceFiller(topPrepositions[i], 20, false);
     }
     fout << endl;
 
-    fout << rpad("Самый частый союз", 40);
+    fout << spaceFiller("Самый частый союз", 40, true);
     for (int i = 0; i < 4; i++) {
-        fout << lpad(top_conjs[i], 20);
+        fout << spaceFiller(topConjunctions[i], 20, false);
     }
     fout << endl;
 
@@ -506,7 +451,7 @@ void fourthCase() {
     string trigrams_list[6] = {"сто", "ено", "нов", "тов", "ово", "ова"};
 
     // Вывод заголовка для биграмм
-    fout << endl << rpad("Буквосочетания (биграммы)", 40) ;
+    fout << endl << spaceFiller("Буквосочетания (биграммы)", 40, true) << endl ;
     // for (int i = 0; i < 4; i++) {
         // fout << lpad("Файл " + to_string(i+1), 20);
     // }
@@ -514,7 +459,7 @@ void fourthCase() {
 
     // Обработка каждой биграммы
     for (const auto& bigram : bigrams_list) {
-        fout << rpad(bigram, 40);
+        fout << spaceFiller(bigram, 40, true);
 
         // Для каждого файла считаем эту биграмму
         for (int file_num = 0; file_num < 4; file_num++) {
@@ -528,7 +473,7 @@ void fourthCase() {
                 // Проверяем, состоит ли из букв
                 bool is_letters = true;
                 for (char c : substr) {
-                    if ((c < 'а' || c > 'я') && c != 'ё') {
+                    if (c < 96 && c != 56) {
                         is_letters = false;
                         break;
                     }
@@ -539,13 +484,13 @@ void fourthCase() {
                 }
             }
 
-            fout << lpad(to_string(count), 20);
+            fout << spaceFiller(to_string(count), 20, false);
         }
         fout << endl;
     }
 
     // Вывод заголовка для триграмм
-    fout << endl << rpad("Буквосочетания (триграммы)", 40);
+    fout << endl << spaceFiller("Буквосочетания (триграммы)", 40, true);
     // for (int i = 0; i < 4; i++) {
         // fout << lpad("Файл " + to_string(i+1), 20);
     // }
@@ -553,7 +498,7 @@ void fourthCase() {
 
     // Обработка каждой триграммы
     for (const auto& trigram : trigrams_list) {
-        fout << rpad(trigram, 40);
+        fout << spaceFiller(trigram, 40, true);
 
         // Для каждого файла считаем эту триграмму
         for (int file_num = 0; file_num < 4; file_num++) {
@@ -567,7 +512,7 @@ void fourthCase() {
                 // Проверяем, состоит ли из букв
                 bool is_letters = true;
                 for (char c : substr) {
-                    if ((c < 'а' || c > 'я') && c != 'ё') {
+                    if (c < 96 && c != 56) {
                         is_letters = false;
                         break;
                     }
@@ -578,13 +523,13 @@ void fourthCase() {
                 }
             }
 
-            fout << lpad(to_string(count), 20);
+            fout << spaceFiller(to_string(count), 20, false);
         }
         fout << endl;
     }
 
     // Дополнительная статистика
-    fout << endl << rpad("Самая частая биграмма", 40);
+    fout << endl << spaceFiller("Самая частая биграмма", 40, true);
     for (int file_num = 0; file_num < 4; file_num++) {
         string text = to_lower(texts[file_num]);
         int max_count = 0;
@@ -598,7 +543,7 @@ void fourthCase() {
                 string substr = text.substr(i, 2);
                 bool is_letters = true;
                 for (char c : substr) {
-                    if ((c < 'а' || c > 'я') && c != 'ё') {
+                    if (c < 96 && c != 56) {
                         is_letters = false;
                         break;
                     }
@@ -615,14 +560,14 @@ void fourthCase() {
         }
 
         if (max_count > 0) {
-            fout << lpad(max_bigram + "(" + to_string(max_count) + ")", 20);
+            fout << spaceFiller(max_bigram + "(" + to_string(max_count) + ")", 20, false);
         } else {
-            fout << lpad("-", 20);
+            fout << spaceFiller("-", 20, false);
         }
     }
     fout << endl;
 
-    fout << rpad("Самая частая триграмма", 40);
+    fout << spaceFiller("Самая частая триграмма", 40, true);
     for (int file_num = 0; file_num < 4; file_num++) {
         string text = to_lower(texts[file_num]);
         int max_count = 0;
@@ -636,7 +581,7 @@ void fourthCase() {
                 string substr = text.substr(i, 3);
                 bool is_letters = true;
                 for (char c : substr) {
-                    if ((c < 'а' || c > 'я') && c != 'ё') {
+                    if (c < 96  && c != 56) {
                         is_letters = false;
                         break;
                     }
@@ -653,9 +598,9 @@ void fourthCase() {
         }
 
         if (max_count > 0) {
-            fout << lpad(max_trigram + "(" + to_string(max_count) + ")", 20);
+            fout << spaceFiller(max_trigram + "(" + to_string(max_count) + ")", 20, false);
         } else {
-            fout << lpad("-", 20);
+            fout << spaceFiller("-", 20, false);
         }
     }
     fout << endl;
@@ -685,41 +630,20 @@ void ninthCase () {
 }
 
 int main() {
-    // SetConsoleCP(CP_UTF8);
-    // SetConsoleOutputCP(CP_UTF8);
-
-    ofstream fout(dir_name + "output_l.txt");
-
-    // setlocale(LC_ALL, "ru");
-    // SetConsoleCP(1251);
-    // SetConsoleOutputCP(1251);
-
-    // void print_string(string func_name, string header){
-    //     cout << rpad(header, 40);
-    //     for (int i = 1; i <= sizeof(texts); i++) {
-    //         cout << lpad(func_name(texts[i]), 20) ;
-    //     }
-    //     fout << endl ;
-    // }
-
     for (int i = 1; i <= 4; i++) {
-        // cout << readText("../resources/input" + to_string(i) + "s.txt") << endl; // debug
-        // cout << readTextCP1251("../resources/input" + to_string(i) + "s.txt") << endl; // debug
         // заполняем массив с текстами
-        texts[i-1] = readTextCP1251(dir_name + "input" + to_string(i) + "l.txt") ;
+        texts[i-1] = readText(dir_name + "input" + to_string(i) + "l.txt") ;
     }
-
     fout << endl ;
     // выводим шапку
-    fout << rpad("Файл",40) << lpad("1",20) << lpad("2",20)
-        << lpad("3", 20) << lpad("4",20) << endl ;
-    fout << "------------------------------------------------------------------------------------------------------------------------" << endl ;
-
+    fout << spaceFiller("Файл",40, true)
+        << spaceFiller("1",20, false) << spaceFiller("2",20, false)
+        << spaceFiller("3", 20, false) << spaceFiller("4",20, false) << endl
+        << "------------------------------------------------------------------------------------------------------------------------" << endl;
     // выводим информацию по критериям, которые можно представить в виде таблицы
     // топорный способ с использованием switch, тапками не бросаться
-    // fout << headers.size() << endl ; fout << sizeof(texts) << endl ;
     for (int i = 0; i < headers.size(); i++) {
-        fout << rpad(headers[i], 40);
+        fout << spaceFiller(headers[i], 40, true);
         for (auto & text : texts) {
             string result ;
             switch (i) {
@@ -771,26 +695,19 @@ int main() {
                 case 45: result = firstCase(text, 95) ; break ;
                 default: break;
             }
-            fout << lpad(result, 20) ;
+            fout << spaceFiller(result, 20, false) ;
         }
         fout << endl ;
     }
 
-    // for (int i = 0; i < 4; i++) {
-        // secondCase();
-        thirdCase();
-        fourthCase();
-        fifthCase();
-        sixthCase();
-        seventhCase();
-        eighthCase();
-        ninthCase();
-    // }
-    // for (const wstring& word : getWords(readText("../resources/input1s.txt"))) {
-    // for (const string& word : getWordsCP1251(readTextCP1251("../resources/input1s.txt"))) {
-    //     // wcout << word << " " ;
-    //     cout << word << " " ;
-    // }
+    thirdCase();
+    fourthCase();
+    fifthCase();
+    sixthCase();
+    seventhCase();
+    eighthCase();
+    ninthCase();
+
     fout.close();
     return 0;
 }
