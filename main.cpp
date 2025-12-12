@@ -699,36 +699,63 @@ void submitStatistics (const vector<string> &ltexts) {
         fout << spaceFiller(to_string(fifthResults[i]) + "(" +
             to_string((static_cast<double>(fifthResults[i]) / getWords(to_lower(ltexts[i])).size()) * 100) + "%)", 20, false);
     }
-    fout << endl << spaceFiller("Пары слов, начинающиеся/заканчивающиеся на гласную/согласную", 40, true) << endl;
-    for (int j = 0; j < 2; j++) {
-        for (int l = 0; l < 4; l++) {
-            string output;
-            switch (l) {
-                case 0: {
-                    output += "Гласная - гласная";
-                    break;
-                } case 1: {
-                    output += "Гласная - согласная";
-                    break;
-                } case 2: {
-                    output += "Согласная - гласная";
-                    break;
-                } case 3: {
-                    output += "Согласная - согласная";
-                    break;
-                } default: break;
-            }
-            if (j == 0) {
-                output += " в начале";
-            } else {
-                output += " в конце";
-            }
-            fout << spaceFiller(output, 40, true);
-            for (int i = 0; i < ltexts.size(); i++) {
-                // map<string, int>::iterator it = l;
-                // fout << spaceFiller(to_string(sixthResults[i][sixthResults[i].begin() + l][j]))
-            }
+    // fout << endl << spaceFiller("Пары слов, начинающиеся/заканчивающиеся на гласную/согласную", 40, true) << endl;
+    // for (int j = 0; j < 2; j++) {
+    //     for (int l = 0; l < 4; l++) {
+    //         string output;
+    //         switch (l) {
+    //             case 0: {
+    //                 output += "Гласная - гласная";
+    //                 break;
+    //             } case 1: {
+    //                 output += "Гласная - согласная";
+    //                 break;
+    //             } case 2: {
+    //                 output += "Согласная - гласная";
+    //                 break;
+    //             } case 3: {
+    //                 output += "Согласная - согласная";
+    //                 break;
+    //             } default: break;
+    //         }
+    //         if (j == 0) {
+    //             output += " в начале";
+    //         } else {
+    //             output += " в конце";
+    //         }
+    //         fout << spaceFiller(output, 40, true);
+    //         for (int i = 0; i < ltexts.size(); i++) {
+    //             // map<string, int>::iterator it = l;
+    //             // fout << spaceFiller(to_string(sixthResults[i][sixthResults[i].begin() + l][j]))
+    //         }
+    //     }
+    // }
+    fout << endl;
+    for (int i = 0; i < 2; i++) {
+        if (i == 0) {
+            fout << spaceFiller("Три гласные", 40, true);
+        } else {
+            fout << spaceFiller("Три согласные", 40, true);
         }
+        for (int j = 0; j < ltexts.size(); j++) {
+            fout << spaceFiller(to_string(seventhResults[j][i]) + "(" +
+                to_string((static_cast<double>(seventhResults[j][i]) / getWords(to_lower(ltexts[j])).size()) * 100) + "%)", 20, false);
+        }
+        fout << "\n";
+    }
+    fout << endl << spaceFiller("Пары, заканчивающиеся на 2-3 гласные и начинающиеся на 2-3 согласные", 40, true);
+    for (int i = 0; i < ltexts.size(); i++) {
+        fout << spaceFiller(to_string(eighthResults[i]) + "(" +
+                to_string((static_cast<double>(eighthResults[i]) / getWords(to_lower(ltexts[i])).size()) * 100) + "%)", 20, false);
+    }
+    fout << endl << spaceFiller("Самое популярное слово (слова)", 40, true);
+    for (int i = 0; i < ltexts.size(); i++) {
+        string output;
+        for (const string& word : ninthResults[i]) {
+            output += word + " ";
+        }
+        output.pop_back();
+        fout << spaceFiller(output, 20, false);
     }
 }
 
